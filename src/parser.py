@@ -1,10 +1,11 @@
 import json
-from pathlib import Path
-from typing import List
+from typing import List, Tuple
 from .models import FunctionDef, PromptTest
 
 
-def load_inputs(functions_path: str, tests_path: str):
+def load_inputs(functions_path: str,
+                tests_path: str) -> Tuple[List[FunctionDef], List[PromptTest]]:
+    """Loads function definitions and test prompts from JSON files."""
     try:
         with open(functions_path, 'r') as f:
             """transform json to dict"""

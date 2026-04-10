@@ -1,7 +1,7 @@
 import argparse  # tool for handling args
 import json
 from llm_sdk import Small_LLM_Model
-from src.parser import load_inputs 
+from src.parser import load_inputs
 from src.engine import generate_response
 
 
@@ -24,6 +24,7 @@ def main():
     for p in prompts:
         print(f"Processing : {p.prompt}")
         ai_json_str = generate_response(model, p.prompt, functions, vocab)
+        print(f"\n--- TEXTE BRUT --- \n{ai_json_str}\n------------------\n")
         try:
             # AI text to dict
             ai_data = json.loads(ai_json_str)
