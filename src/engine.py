@@ -79,6 +79,8 @@ def generate_response(model, prompt: str, functions: List[FunctionDef],
         state.update_state(current_gen_text)
         #  get Logits
         raw_logits_list = model.get_logits_from_input_ids(generated_ids)
+        # Transform the output into a NumPy array so you can easily manipulate
+        # the data float32 is less memory than floqt64
         last_token_logits = np.array(raw_logits_list, dtype=np.float32)
         # apply my filtre
         filtered_logits = json_constraints(last_token_logits, state, vocab,
