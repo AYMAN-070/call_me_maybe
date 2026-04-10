@@ -1,0 +1,33 @@
+[
+    {
+        "prompt": "What is the sum of 2 and 3?",
+        "name": "fn_add_numbers",
+        "parameters": {
+            "a": 2,
+            "b": 3
+        }
+    },
+    {
+        "prompt": "What is the sum of 265 and 345?",
+        "name": "fn_add_numbers",
+        "parameters": {
+            "a": 265,
+            "b": 345
+        }
+    },
+    {
+        "prompt": "Greet shrek",
+        "name": "shrek",
+        "parameters": null
+    },
+    {
+        "prompt": "Greet john",
+        "name": "john",
+        "parameters": null
+    },
+    {
+        "prompt": "Reverse the string 'hello'",
+        "name": "hello",
+        "parameters": null
+    }
+]

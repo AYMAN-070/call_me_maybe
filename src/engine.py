@@ -38,35 +38,16 @@ def json_constraints(logits: torch.Tensor, state: JSONState, vocab: Dict) -> tor
     Takes scores(logits) and kill forbiden words"""
     # take a copy of IA scores
     original_logits = logits.clone()
+    if state.current_step != "FUNC_NAME":
+        return original_logits
     logits.fill_(-float('inf'))
-    def allow(token_text):
-        t_id = vocab.get(token_text)
-        if t_id is not None: logits[t_id] = 0
-    if state.current_step == "START":
-        allow("{")
-    elif state.current_step == "KEY_NAME":
-        allow('"name"')
-    elif state.current_step == "COLON" or state.current_step == "ARG_COLON":
-        allow(":")
-    elif state.current_step == "FUNC_NAME":
-        for fn_name in state.functions.keys():
-            target = f'"{fn_name}"'
-            token_id = vocab.get(target)
-            if token_id is not None: 
-                logits[token_id] = original_logits[token_id]
-            else:
-                print(f"Warning: Token {target} not found in vocab!")
-    elif state.current_step == "COMMA":
-        allow(",")
-    elif state.current_step == "KEY_ARGS":
-        allow('"parameters"')
-    elif state.current_step == "ARG_START":
-        allow("{")
-    elif state.current_step == "VALUE":
-        """Give back to IA original scores, so it can chose """
-        return original_logits 
-    elif state.current_step == "END":
-        allow("}")
+    for fn_name in state.functions:
+        target = f'"{fn_name}"'
+        token_id = vocab.get(target)
+        if token_id is not None: 
+            logits[token_id] = original_logits[token_id]
+    if torch.all(logits == -float('inf')):
+        return original_logits
     return logits
 
 def generate_response(model, prompt: str, functions: List[FunctionDef], vocab: Dict):
@@ -75,14 +56,15 @@ def generate_response(model, prompt: str, functions: List[FunctionDef], vocab: D
     for f in functions:
         tools_doc += f"- {f.name}: {f.description}. Parameters: {f.parameters}\n"
     system_instruction = (
-        "System: You are a function calling assistant.\n"
-        f"You have access to these tools:\n{tools_doc}\n"
-        "Output ONLY the JSON call. No talk."
+        "System: You are a strict function calling AI. Output ONLY a valid JSON object.\n"
+        f"Available tools:\n{tools_doc}"
     )
-    full_prompt = f"{system_instruction}\nUser: {prompt}\nAssistant:"
+    prefix = '{"name": "'
+    full_prompt = f"{system_instruction}\nUser: {prompt}\nAssistant:\n{prefix}"
     # Encoding: We get a clean list of integers using [0].tolist()
     generated_ids = model.encode(full_prompt)[0].tolist()
     state = JSONState(functions)
+    state.current_step = "FUNC_NAME"
     for i in range(100):
         full_text = model.decode(generated_ids)
         current_gen_text = full_text.split("Assistant:")[-1]
@@ -96,8 +78,11 @@ def generate_response(model, prompt: str, functions: List[FunctionDef], vocab: D
         # chose the high proba
         next_token_id = int(torch.argmax(filtered_logits).item())
         generated_ids.append(next_token_id)
+        # Verify text with new token
+        final_text = model.decode(generated_ids)
+        final_gen_text = final_text.split("Assistant:")[-1].strip()
         # stop consition
-        if next_token_id == model.tokenizer.eos_token_id or current_gen_text.strip().endswith("}"):
+        if next_token_id == model._tokenizer.eos_token_id or final_gen_text.endswith("}"):
             break
 
     return model.decode(generated_ids).split("Assistant:")[-1].strip()
