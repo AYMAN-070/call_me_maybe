@@ -4,6 +4,7 @@ from llm_sdk import Small_LLM_Model
 from src.parser import load_inputs 
 from src.engine import generate_response
 
+
 def main():
     parser = argparse.ArgumentParser(description="Function Calling")
     parser.add_argument("--functions_definition", default="data/input/"
@@ -35,8 +36,9 @@ def main():
         except Exception as e:
             print(f"Skipping due to AI format error: {e}")
     with open(args.output, 'w') as f:
-        # uses the json module to write Python data to a JSON format in output file
+        # write Python data to a JSON format in output file
         json.dump(results, f, indent=4)
+
 
 if __name__ == "__main__":
     main()

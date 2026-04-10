@@ -53,10 +53,16 @@ def json_constraints(logits: torch.Tensor, state: JSONState, vocab: Dict) -> tor
 def generate_response(model, prompt: str, functions: List[FunctionDef], vocab: Dict):
     """Generates a complete JSON response using constraint decoding."""
     tools_doc = ""
+    valid_names_fct = []
     for f in functions:
         tools_doc += f"- {f.name}: {f.description}. Parameters: {f.parameters}\n"
+        valid_names_fct.append(f'"{f.name}"')
+    allowed_names_str = ", ".join(valid_names_fct)
     system_instruction = (
-        "System: You are a strict function calling AI. Output ONLY a valid JSON object.\n"
+        "System: You are a strict function calling AI.\n"
+        f"CRITICAL: You MUST choose a tool name ONLY from this list: {allowed_names_str}.\n"
+        "Output ONLY a valid JSON object in this exact format:\n"
+        '{"name": "the_tool_name", "parameters": {"arg_name": "value"}}\n\n'
         f"Available tools:\n{tools_doc}"
     )
     prefix = '{"name": "'
@@ -82,7 +88,7 @@ def generate_response(model, prompt: str, functions: List[FunctionDef], vocab: D
         final_text = model.decode(generated_ids)
         final_gen_text = final_text.split("Assistant:")[-1].strip()
         # stop consition
-        if next_token_id == model._tokenizer.eos_token_id or final_gen_text.endswith("}"):
-            break
-
-    return model.decode(generated_ids).split("Assistant:")[-1].strip()
+        if ((next_token_id == model._tokenizer.eos_token_id) or
+            (final_gen_text.count("{") == final_gen_text.count("}") and
+             final_gen_text.count("{") > 0)):
+            return model.decode(generated_ids).split("Assistant:")[-1].strip()
