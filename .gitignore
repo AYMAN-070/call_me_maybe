@@ -15,3 +15,6 @@ ENV/
 data/output/
 .python-version
 uv.lock
+
+data/output/*
+!data/output/.gitkeep
