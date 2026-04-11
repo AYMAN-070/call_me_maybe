@@ -5,7 +5,7 @@ from src.parser import load_inputs
 from src.engine import generate_response
 
 
-def main():
+def main() -> None:
     parser = argparse.ArgumentParser(description="Function Calling")
     parser.add_argument("--functions_definition", default="data/input/"
                         "function_definitions.json")

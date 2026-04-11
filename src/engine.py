@@ -1,5 +1,5 @@
 import numpy as np
-from typing import List, Dict
+from typing import List, Dict, Any
 from .models import FunctionDef
 
 
@@ -11,7 +11,7 @@ class JSONState:
         self.functions = [f.name for f in allowed_functions]
         self.current_step = "START"
 
-    def update_state(self, last_text: str):
+    def update_state(self, last_text: str) -> None:
         """desactivate state filtre if fct name is generated"""
         if self.current_step != "FUNC_NAME":
             return
@@ -50,8 +50,8 @@ def json_constraints(logits: np.ndarray, state: JSONState,
     return filtred_logits
 
 
-def generate_response(model, prompt: str, functions: List[FunctionDef],
-                      vocab: Dict):
+def generate_response(model: Any, prompt: str, functions: List[FunctionDef],
+                      vocab: Dict[str, int]) -> str:
     """Generates a complete JSON response using constraint decoding."""
     tools_doc = ""
     valid_names_fct = []
@@ -70,9 +70,10 @@ def generate_response(model, prompt: str, functions: List[FunctionDef],
     prefix = '{"name": "'
     full_prompt = f"{system_instruction}\nUser: {prompt}\nAssistant:\n{prefix}"
     # Encoding: We get a clean list of integers using [0].tolist()
-    generated_ids = model.encode(full_prompt)[0].tolist()
+    generated_ids: List[int] = model.encode(full_prompt)[0].tolist()
     state = JSONState(functions)
     state.current_step = "FUNC_NAME"
+    final_gen_text: str = ""
     for i in range(100):
         full_text = model.decode(generated_ids)
         current_gen_text = full_text.split("Assistant:")[-1]

@@ -17,7 +17,7 @@ clean:
 		find . -type d -name ".pytest_cache" -exec rm -rf {} +
 lint:
 		$(FLAKE8) $(SRC_DIR)
-	$(MYPY) --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs $(SRC_DIR)
+		$(MYPY) $(SRC_DIR)
 
 lint-strict:
 		$(FLAKE8) $(SRC_DIR)
