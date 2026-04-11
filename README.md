@@ -46,7 +46,6 @@ This project uses **Constrained Decoding** to guarantee structural and semantic 
 
 ## Design Decisions
 * **Numpy over Heavy Frameworks:** To comply with the strict requirement of not using PyTorch or external ML libraries, the logits modification is handled entirely using pure `numpy` arrays.
-* **Pydantic Validation:** `pydantic` is used to dynamically validate the final JSON structure and ensure that argument types (like strings vs. numbers) strictly match the function definitions.
 * **Prefix Matching over Exact Match:** To bypass the issue of subword tokenization (where a single word is split into multiple tokens by the model), the filtering algorithm checks for syllable prefixes rather than full exact words.
 * **Prefilling:** The generation is explicitly primed with `{"name": "` to immediately lock the LLM into the desired JSON format, effectively optimizing the state machine and eliminating initial unpredictability.
 
