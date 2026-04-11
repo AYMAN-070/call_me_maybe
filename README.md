@@ -72,4 +72,3 @@ The implementation was validated using a multi-layered approach:
     * Understand the mathematical relationship between Logits, Softmax, and Tokenization.
     * Refactor the State Machine to adhere to the KISS principle.
     * Troubleshoot and resolve strict `mypy` typing errors related to the provided SDK.
-    * AI generated code was systematically peer-reviewed and rewritten to ensure deep personal comprehension before integration.
