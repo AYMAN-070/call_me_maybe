@@ -24,14 +24,29 @@ def main() -> None:
     for p in prompts:
         print(f"Processing : {p.prompt}")
         ai_json_str = generate_response(model, p.prompt, functions, vocab)
-        print(f"\n--- TEXTE BRUT --- \n{ai_json_str}\n------------------\n")
+        print(f"\n--- TEXT GENERATED--- \n{ai_json_str}\n------------------\n")
         try:
             # AI text to dict
             ai_data = json.loads(ai_json_str)
+            ai_func_name = ai_data.get("name")
+            ai_params = ai_data.get("parameters", {})
+            # Verify output Type
+            target_function = next((f for f in functions
+                                    if f.name == ai_func_name), None)
+            if target_function:
+                for arg_name, value in ai_params.items():
+                    # Very if it's an int and IA make a string
+                    if arg_name in target_function.parameters:
+                        expected_type = target_function.parameters[arg_name].type
+                        if expected_type == "number":
+                            try:
+                                ai_params[arg_name] = float(value)
+                            except (ValueError, TypeError):
+                                pass
             final_entry = {
                 "prompt": p.prompt,
-                "name": ai_data.get("name"),
-                "parameters": ai_data.get("parameters")
+                "name": ai_func_name,
+                "parameters": ai_params
             }
             results.append(final_entry)
         except Exception as e:

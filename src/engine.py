@@ -74,10 +74,22 @@ def generate_response(model: Any, prompt: str, functions: List[FunctionDef],
     state = JSONState(functions)
     state.current_step = "FUNC_NAME"
     final_gen_text: str = ""
-    for i in range(100):
+    for i in range(200):
         full_text = model.decode(generated_ids)
         current_gen_text = full_text.split("Assistant:")[-1]
+        prev_step = state.current_step
         state.update_state(current_gen_text)
+        # INJECTION FORCÉE DE LA VIRGULE ET DES PARAMÈTRES
+        if prev_step == "FUNC_NAME" and state.current_step == "PARAM_START":
+            # On cherche l'endroit exact où l'IA a fermé le guillemet du nom
+            start_idx = full_text.rfind('{"name": "')
+            second_quote_idx = full_text.find('"', start_idx + 10)
+            # On coupe les erreurs (espaces en trop, mots oubliés) et on FORCE la suite !
+            clean_full_text = (full_text[:second_quote_idx + 1] +
+                               ', "parameters": {')
+            # On remet ce texte parfait dans la tête de l'IA et on relance !
+            generated_ids = model.encode(clean_full_text)[0].tolist()
+            continue
         #  get Logits
         raw_logits_list = model.get_logits_from_input_ids(generated_ids)
         # Transform the output into a NumPy array so you can easily manipulate
