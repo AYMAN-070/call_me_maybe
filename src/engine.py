@@ -81,14 +81,24 @@ def generate_response(model: Any, prompt: str, functions: List[FunctionDef],
         state.update_state(current_gen_text)
         # INJECTION FORCÉE DE LA VIRGULE ET DES PARAMÈTRES
         if prev_step == "FUNC_NAME" and state.current_step == "PARAM_START":
-            # On cherche l'endroit exact où l'IA a fermé le guillemet du nom
-            start_idx = full_text.rfind('{"name": "')
-            second_quote_idx = full_text.find('"', start_idx + 10)
-            # On coupe les erreurs (espaces en trop, mots oubliés) et on FORCE la suite !
-            clean_full_text = (full_text[:second_quote_idx + 1] +
-                               ', "parameters": {')
-            # On remet ce texte parfait dans la tête de l'IA et on relance !
-            generated_ids = model.encode(clean_full_text)[0].tolist()
+            fct_name = current_gen_text.split('"')[3]
+            fct_found = None
+            for f in functions:
+                if f.name == fct_name:
+                    fct_found = f
+                    break
+            if fct_found and fct_found.parameters:
+                first_param = list(fct_found.parameters.keys())[0]
+                text = (
+                            f'{{"name": "{fct_name}", "parameters": '
+                            f'{{"{first_param}": '
+                        )
+            else:
+                text = f'{{"name": "{fct_name}", "parameters": {{}}'
+            prompt_begining = (full_text.split('Assistant:\n')[0] +
+                               'Assistant:\n')
+            new_text = prompt_begining + text
+            generated_ids = model.encode(new_text)[0].tolist()
             continue
         #  get Logits
         raw_logits_list = model.get_logits_from_input_ids(generated_ids)

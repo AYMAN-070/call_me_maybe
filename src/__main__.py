@@ -23,6 +23,14 @@ def main() -> None:
     results = []
     for p in prompts:
         print(f"Processing : {p.prompt}")
+        if not p.prompt or p.prompt.strip() == "":
+            print("Warning : Prompt is empty.")
+            results.append({
+                "prompt": p.prompt,
+                "name": "error_empty_prompt",
+                "parameters": {}
+            })
+            continue
         ai_json_str = generate_response(model, p.prompt, functions, vocab)
         print(f"\n--- TEXT GENERATED--- \n{ai_json_str}\n------------------\n")
         try:
@@ -37,7 +45,9 @@ def main() -> None:
                 for arg_name, value in ai_params.items():
                     # Very if it's an int and IA make a string
                     if arg_name in target_function.parameters:
-                        expected_type = target_function.parameters[arg_name].type
+                        expected_type = (
+                            target_function.parameters[arg_name].type
+                        )
                         if expected_type == "number":
                             try:
                                 ai_params[arg_name] = float(value)
@@ -50,7 +60,7 @@ def main() -> None:
             }
             results.append(final_entry)
         except Exception as e:
-            print(f"Skipping due to AI format error: {e}")
+            print(f"Warning: Unable to process the prompt: {e}")
     with open(args.output, 'w') as f:
         # write Python data to a JSON format in output filee
         json.dump(results, f, indent=4)
