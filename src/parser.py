@@ -1,10 +1,10 @@
 import json
-from typing import List, Tuple
+from typing import List, Tuple, Any
 from .models import FunctionDef, PromptTest
 import sys
 
 
-def read_json_safely(filepath: str):
+def read_json_safely(filepath: str) -> Any:
     try:
         with open(filepath, 'r', encoding='utf-8') as f:
             return json.load(f)
