@@ -3,6 +3,7 @@ import json
 from llm_sdk import Small_LLM_Model
 from src.parser import load_inputs
 from src.engine import generate_response
+import os
 
 
 def main() -> None:
@@ -23,6 +24,14 @@ def main() -> None:
     results = []
     for p in prompts:
         print(f"Processing : {p.prompt}")
+        if not functions:
+            print("Warning : No function defined.")
+            results.append({
+                "prompt": p.prompt,
+                "name": "error_no_functions_defined",
+                "parameters": {}
+            })
+            continue
         if not p.prompt or p.prompt.strip() == "":
             print("Warning : Prompt is empty.")
             results.append({
@@ -61,6 +70,9 @@ def main() -> None:
             results.append(final_entry)
         except Exception as e:
             print(f"Warning: Unable to process the prompt: {e}")
+    output_dir = os.path.dirname(args.output)
+    if output_dir:
+        os.makedirs(output_dir, exist_ok=True)
     with open(args.output, 'w') as f:
         # write Python data to a JSON format in output filee
         json.dump(results, f, indent=4)

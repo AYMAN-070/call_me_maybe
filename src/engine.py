@@ -115,8 +115,7 @@ def generate_response(model: Any, prompt: str, functions: List[FunctionDef],
         final_text = model.decode(generated_ids)
         final_gen_text = final_text.split("Assistant:\n")[-1].strip()
         # stop consition
-        if ((next_token_id == model._tokenizer.eos_token_id) or
-            (final_gen_text.count("{") == final_gen_text.count("}") and
+        if ((final_gen_text.count("{") == final_gen_text.count("}") and
              final_gen_text.count("{") > 0)):
             return final_gen_text
     return final_gen_text
